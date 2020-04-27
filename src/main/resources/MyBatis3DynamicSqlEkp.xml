@@ -1,0 +1,22 @@
+<!DOCTYPE generatorConfiguration PUBLIC
+        "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <context id="sqlserver" targetRuntime="MyBatis3DynamicSql">
+        <jdbcConnection driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+                        connectionURL="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=ekp" userId="sa" password="123456"/>
+
+        <javaModelGenerator targetPackage="cn.com.wdi.scm.model.ekp" targetProject="src/main/java"/>
+
+        <javaClientGenerator targetPackage="cn.com.wdi.scm.mapper.ekp" targetProject="src/main/java"/>
+
+        <table tableName="wdi_po_idjl" />
+        <table tableName="wdi_po_label" />
+        <table tableName="wdi_po_pake" />
+        <table tableName="wdi_matnr_makt" />
+        <table tableName="wdi_matnr_mara" />
+        <table tableName="wdi_matnr_marc" />
+        <table tableName="wdi_matnr_mard" />
+
+    </context>
+</generatorConfiguration>

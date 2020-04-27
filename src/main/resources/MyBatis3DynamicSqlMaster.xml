@@ -1,0 +1,40 @@
+<!DOCTYPE generatorConfiguration PUBLIC
+        "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <context id="sqlserver" targetRuntime="MyBatis3DynamicSql">
+        <jdbcConnection driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+                        connectionURL="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=scm" userId="sa" password="123456"/>
+
+        <javaModelGenerator targetPackage="cn.com.wdi.scm.model.master.test" targetProject="src/main/java"/>
+
+        <javaClientGenerator targetPackage="cn.com.wdi.scm.mapper.master.test" targetProject="src/main/java"
+                             type="ANNOTATEDMAPPER"/>
+
+        <table tableName="scm_person">
+            <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
+" type="pre"/>
+        </table>
+        <table tableName="scm_role">
+            <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
+" type="pre"/>
+        </table>
+        <table tableName="scm_person_role">
+            <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
+" type="pre"/>
+        </table>
+        <table tableName="sap_config">
+            <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
+" type="pre"/>
+        </table>
+        <table tableName="scm_menu">
+            <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
+" type="pre"/>
+        </table>
+        <table tableName="scm_menu_role">
+            <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
+" type="pre"/>
+        </table>
+
+    </context>
+</generatorConfiguration>
