@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -41,7 +40,7 @@ public class DynamicDataSourceAspect {
             log.error("DataSource [{}] doesn't exist, use default DataSource [{}]", DataSourceTypeEnum.MASTER.getValue(), DataSourceTypeEnum.MASTER);
         } else {
             DynamicDataSourceContextHolder.setDataSourceKey(DataSourceTypeEnum.MASTER.getValue());
-            log.info("Switch DataSource to [{}] in Method [{}]",
+            log.debug("Switch DataSource to [{}] in Method [{}]",
                     DynamicDataSourceContextHolder.getDataSourceKey(), point.getSignature());
         }
     }
@@ -52,7 +51,7 @@ public class DynamicDataSourceAspect {
             log.error("DataSource [{}] doesn't exist, use default DataSource [{}]", DataSourceTypeEnum.SLAVE.getValue(), DataSourceTypeEnum.MASTER);
         } else {
             DynamicDataSourceContextHolder.setDataSourceKey(DataSourceTypeEnum.SLAVE.getValue());
-            log.info("Switch DataSource to [{}] in Method [{}]",
+            log.debug("Switch DataSource to [{}] in Method [{}]",
                     DynamicDataSourceContextHolder.getDataSourceKey(), point.getSignature());
         }
     }
@@ -76,7 +75,7 @@ public class DynamicDataSourceAspect {
             log.error("DataSource [{}] doesn't exist, use default DataSource [{}]", targetDataSource.value(), DataSourceTypeEnum.MASTER);
         } else {
             DynamicDataSourceContextHolder.setDataSourceKey(targetDataSource.value());
-            log.info("Switch DataSource to [{}] in Method [{}]",
+            log.debug("Switch DataSource to [{}] in Method [{}]",
                     DynamicDataSourceContextHolder.getDataSourceKey(), point.getSignature());
         }
     }
@@ -90,7 +89,7 @@ public class DynamicDataSourceAspect {
     public void restoreDataSource(JoinPoint point) {
         // 将数据源置为默认数据源
         DynamicDataSourceContextHolder.clearDataSourceKey();
-        log.info("Restore DataSource to [{}] in Method [{}]",
+        log.debug("Restore DataSource to [{}] in Method [{}]",
                 DynamicDataSourceContextHolder.getDataSourceKey(), point.getSignature());
     }
 }

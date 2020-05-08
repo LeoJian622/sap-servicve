@@ -13,14 +13,14 @@ import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
-import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
-import javax.management.relation.Role;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.mybatis.dynamic.sql.SqlBuilder.*;
+import static org.mybatis.dynamic.sql.SqlBuilder.equalTo;
+import static org.mybatis.dynamic.sql.SqlBuilder.select;
 
 /**
  * 获取请求地址所需要的角色
@@ -56,19 +56,25 @@ public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocati
                 .render(RenderingStrategies.MYBATIS3);
 
         List<ScmMenu> menuList = menuMapper.selectManyJoin(selectStatementProvider);
+        List<String> roleValues = new ArrayList<>();
         for (ScmMenu menu : menuList) {
             if (antPathMatcher.match(menu.getUrl(), requestUrl) && menu.getRoles().size() > 0) {
                 List<ScmRole> roleList = menu.getRoles();
                 int size = roleList.size();
-                String[] roleValues = new String[size];
                 for (int i = 0; i < size; i++) {
-                    roleValues[i] = roleList.get(i).getName();
+                    roleValues.add(roleList.get(i).getName());
                 }
-                return SecurityConfig.createList(roleValues);
+
             }
         }
-        //没有匹配上的资源，都是登录访问
-        return SecurityConfig.createList(UrlDefautlRoleEnum.ROLE_LOGIN.getValue());
+        if (roleValues.isEmpty()) {
+            //没有匹配上的资源，都是登录访问
+            return SecurityConfig.createList(UrlDefautlRoleEnum.ROLE_LOGIN.getValue());
+        }else {
+            String[] roleValerArray = new String[roleValues.size()];
+            roleValues.toArray(roleValerArray);
+            return SecurityConfig.createList(roleValerArray);
+        }
     }
 
     @Override

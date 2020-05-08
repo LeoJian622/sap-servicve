@@ -55,7 +55,7 @@ class ScmPersonMapperTest {
                 .leftJoin(scmPersonRole)
                 .on(ScmPersonDynamicSqlSupport.id, equalTo(ScmPersonRoleDynamicSqlSupport.personId))
                 .leftJoin(scmRole)
-                .on(ScmPersonRoleDynamicSqlSupport.id, equalTo(ScmRoleDynamicSqlSupport.id)).where(ScmPersonDynamicSqlSupport.id, isEqualTo("1"))
+                .on(ScmPersonRoleDynamicSqlSupport.id, equalTo(ScmRoleDynamicSqlSupport.id)).where(ScmPersonDynamicSqlSupport.id, isEqualTo("2"))
                 .build()
                 .render(RenderingStrategies.MYBATIS3);
         List<ScmPerson> re = scmPersonMapper.selectManyJoin(selectStatementProvider);

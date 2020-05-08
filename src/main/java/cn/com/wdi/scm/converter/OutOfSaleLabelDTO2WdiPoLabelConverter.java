@@ -2,12 +2,7 @@ package cn.com.wdi.scm.converter;
 
 import cn.com.wdi.scm.dto.OutOfSaleLabelDTO;
 import cn.com.wdi.scm.model.ekp.WdiPoLabel;
-import cn.com.wdi.scm.model.master.SapConfig;
-import cn.com.wdi.scm.sap.api.config.CustomDestinationDataProvider;
-import freemarker.template.utility.DateUtil;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Properties;
 
 /**
  * @author liyongjian

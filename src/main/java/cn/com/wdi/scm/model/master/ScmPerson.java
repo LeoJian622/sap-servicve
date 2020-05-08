@@ -7,13 +7,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Generated;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 @ToString
 @EqualsAndHashCode
-public class ScmPerson implements UserDetails {
+public class ScmPerson implements UserDetails, Serializable {
+
+    private static final long serialVersionUID = 2975954393375298568L;
+
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", date="2020-03-19T14:44:43.002+08:00", comments="Source field: scm_person.id")
     private String id;
 

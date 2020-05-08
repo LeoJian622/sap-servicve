@@ -81,6 +81,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) {
         //对于在header里面增加token等类似情况，放行所有OPTIONS请求。
         web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
+        web.ignoring().antMatchers("/v2/api-docs",
+                "/swagger-resources/configuration/ui",
+                "/swagger-resources",
+                "/swagger-resources/configuration/security",
+                "/swagger-ui.html",
+                "/webjars/**");
     }
 
     @Override
@@ -92,7 +98,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             PrintWriter out = res.getWriter();
                             StringBuffer sb = new StringBuffer();
-                            sb.append("{\"status\":false,\"msg\":\"请登录!\"}");
+                            sb.append("{\"code\":10001,\"msg\":\"请登录!\",\"data\":\"\"}");
                             out.write(sb.toString());
                             out.flush();
                             out.close();
@@ -100,8 +106,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 )
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
-                                .antMatchers("/", "/static/**")
-                                .permitAll()
                                 .withObjectPostProcessor(new ObjectPostProcessor<FilterSecurityInterceptor>() {
                                     @Override
                                     public <O extends FilterSecurityInterceptor> O postProcess(O o) {
@@ -122,7 +126,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                                             res.setContentType("application/json;charset=utf-8");
                                             PrintWriter out = res.getWriter();
                                             StringBuffer sb = new StringBuffer();
-                                            sb.append("{\"status\":false,\"msg\":\"");
+                                            sb.append("{\"code\":10002,\"msg\":\"");
                                             if (ex instanceof UsernameNotFoundException || ex instanceof BadCredentialsException) {
                                                 sb.append("用户名或密码输入错误，登录失败!");
                                             } else if (ex instanceof DisabledException) {
@@ -130,7 +134,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                                             } else {
                                                 sb.append("登录失败!");
                                             }
-                                            sb.append("\"}");
+                                            sb.append("\",\"data\":\"\"}");
                                             out.write(sb.toString());
                                             out.flush();
                                             out.close();
@@ -139,7 +143,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                                             res.setContentType("application/json;charset=utf-8");
                                             PrintWriter out = res.getWriter();
                                             StringBuffer sb = new StringBuffer();
-                                            sb.append("{\"status\":true,\"msg\":\"登录成功!\"}");
+                                            sb.append("{\"status\":10000,\"msg\":\"登录成功!\",\"data\":\"\"}");
                                             out.write(sb.toString());
                                             out.flush();
                                             out.close();

@@ -5,10 +5,14 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import javax.annotation.Generated;
+import java.io.Serializable;
 
 @ToString
 @EqualsAndHashCode
-public class ScmRole {
+public class ScmRole implements Serializable {
+
+    private static final long serialVersionUID = 975739181947052078L;
+
     @Generated(value="org.mybatis.generator.api.MyBatisGenerator", date="2020-03-19T14:44:43.032+08:00", comments="Source field: scm_role.id")
     private String id;
 

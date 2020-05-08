@@ -17,19 +17,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.mybatis.dynamic.sql.render.RenderingStrategies;
 import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.mybatis.dynamic.sql.SqlBuilder.*;
+import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
+import static org.mybatis.dynamic.sql.SqlBuilder.select;
 
 /**
  * 外购标签信息服务实现
@@ -264,6 +261,9 @@ public class LabelManagerImpl implements LabelManager {
         input.put(StringEnum.TYPEX.getValue(), type);
         //执行SAP函数
         R result = customJcoService.execute(StringEnum.Z_OA_LJCPOMRP.getValue(), StringEnum.PRD800.getValue(), input);
+        if (R.FAIL == result.getCode()) {
+            throw new ScmException("SAP函数执行失败:" + StringEnum.Z_OA_LJCPOMRP.getValue() + "," + result.getMsg());
+        }
         Map<String, Object> dataMap = (Map<String, Object>) result.getData();
         return Optional.ofNullable(dataMap).orElseThrow(() -> new ScmException("物料:" + material + "SAP查询PO失败"));
     }

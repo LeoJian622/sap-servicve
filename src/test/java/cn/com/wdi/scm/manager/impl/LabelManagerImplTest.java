@@ -6,19 +6,13 @@ import cn.com.wdi.scm.exception.ScmException;
 import cn.com.wdi.scm.manager.LabelManager;
 import cn.com.wdi.scm.model.ekp.WdiPoLabel;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.annotation.Before;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
