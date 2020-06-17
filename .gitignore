@@ -32,3 +32,6 @@ build/
 
 ### prod config ####
 /src/main/resources/application-pro.yml
+
+### atomikos ###
+tmlog*
