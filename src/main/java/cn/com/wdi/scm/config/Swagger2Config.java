@@ -2,18 +2,16 @@ package cn.com.wdi.scm.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
-import java.util.List;
-
-import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * Swagger2 config
@@ -24,7 +22,8 @@ import static com.google.common.collect.Lists.newArrayList;
 
 @Configuration
 @EnableSwagger2
-public class Swagger2Config{
+@Profile("dev")
+public class Swagger2Config implements WebMvcConfigurer {
 
     @Bean
     public Docket createRestApi() {
@@ -33,9 +32,7 @@ public class Swagger2Config{
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("cn.com.wdi.scm.controller"))
                 .paths(PathSelectors.any())
-                .build()
-                .securitySchemes(security())
-                ;
+                .build();
     }
 
     private ApiInfo apiInfo() {
@@ -46,10 +43,22 @@ public class Swagger2Config{
                 .build();
     }
 
-    private List<ApiKey> security() {
-        return newArrayList(
-                new ApiKey("session", "JSESSIONID", "header")
-        );
-    }
 
+    /**
+     * 防止@EnableMvc把默认的静态资源路径覆盖了，手动设置的方式
+     *
+     * @param registry
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 解决静态资源无法访问
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/");
+        // 解决swagger无法访问
+        registry.addResourceHandler("/swagger-ui.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        // 解决swagger的js文件无法访问
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+    }
 }

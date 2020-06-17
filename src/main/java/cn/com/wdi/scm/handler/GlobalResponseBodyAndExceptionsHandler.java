@@ -124,7 +124,7 @@ public class GlobalResponseBodyAndExceptionsHandler{
     /** 404错误 */
     @ExceptionHandler({NoHandlerFoundException.class})
     public ReturnBodyVO requestStackOverflowHandler(NoHandlerFoundException ex) {
-        log.error("栈溢出：{} ", ex.getMessage(), ex);
+        log.error("找不到资源：{} ", ex.getMessage(), ex);
         return ReturnBodyVO.error(ex);
     }
 

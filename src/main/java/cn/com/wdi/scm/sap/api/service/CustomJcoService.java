@@ -22,10 +22,9 @@ public interface CustomJcoService {
 
     /**
      * 执行SAP函数
-     * @param functionName 函数名
-     * @param destName 服务器名
+     * @param callName 函数名
      * @param paramMap 参数
      * @return
      */
-    R execute(String functionName, String destName, Map<String, Object> paramMap);
+    R execute(String callName, Map<String, Object> paramMap);
 }

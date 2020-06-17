@@ -3,7 +3,10 @@ package cn.com.wdi.scm.sap.api.service.impl;
 import cn.com.wdi.scm.converter.SapConfig2PropertiesConverter;
 import cn.com.wdi.scm.mapper.master.SapConfigDynamicSqlSupport;
 import cn.com.wdi.scm.mapper.master.SapConfigMapper;
+import cn.com.wdi.scm.mapper.master.SapFunctionDynamicSqlSupport;
+import cn.com.wdi.scm.mapper.master.SapFunctionMapper;
 import cn.com.wdi.scm.model.master.SapConfig;
+import cn.com.wdi.scm.model.master.SapFunction;
 import cn.com.wdi.scm.sap.CustomJcoStringEnum;
 import cn.com.wdi.scm.sap.api.config.CustomDestinationDataProvider;
 import cn.com.wdi.scm.sap.api.exception.CustomBusinessException;
@@ -23,6 +26,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
 import static org.mybatis.dynamic.sql.SqlBuilder.select;
 
 /**
@@ -42,10 +46,71 @@ public class CustomJcoServiceImpl implements CustomJcoService {
 
     private final SapConfigMapper sapConfigMapper;
 
+    private final SapFunctionMapper sapFunctionMapper;
+
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    public CustomJcoServiceImpl(CustomDestinationDataProvider customDestinationDataProvider, SapConfigMapper sapConfigMapper) {
+    public CustomJcoServiceImpl(CustomDestinationDataProvider customDestinationDataProvider, SapConfigMapper sapConfigMapper, SapFunctionMapper sapFunctionMapper) {
         this.customDestinationDataProvider = customDestinationDataProvider;
         this.sapConfigMapper = sapConfigMapper;
+        this.sapFunctionMapper = sapFunctionMapper;
+    }
+
+    /**
+     * 获取输出参数列表
+     *
+     * @param jCoFunction 函数
+     * @param resultMap   返回值
+     */
+    public static void getExportParameterList(JCoFunction jCoFunction, Map resultMap) {
+        for (Iterator<JCoField> iterator = jCoFunction.getExportParameterList().iterator(); iterator.hasNext(); ) {
+            traversalField(resultMap, iterator);
+        }
+    }
+
+    /**
+     * 获取表格输出列表
+     *
+     * @param jCoFunction 函数
+     * @param resultMap   返回值
+     */
+    public static void getTableParameterList(JCoFunction jCoFunction, Map resultMap) {
+        for (Iterator<JCoField> iterator = jCoFunction.getTableParameterList().iterator(); iterator.hasNext(); ) {
+            traversalField(resultMap, iterator);
+        }
+    }
+
+    /**
+     * 遍历字段
+     *
+     * @param resultMap 返回值
+     * @param iterator  迭代器
+     */
+    private static void traversalField(Map resultMap, Iterator<JCoField> iterator) {
+        JCoField jCoField = iterator.next();
+        if (jCoField.isTable()) {
+            JCoTable table = jCoField.getTable();
+            List resultList = new ArrayList();
+            for (int i = 0, len = table.getNumRows(); i < len; i++) {
+                Map retMap = new HashMap();
+                table.setRow(i);
+                for (JCoRecordFieldIterator jCoRecordFieldIterator = table.getRecordFieldIterator(); jCoRecordFieldIterator.hasNextField(); ) {
+                    JCoField field = jCoRecordFieldIterator.nextRecordField();
+                    retMap.put(field.getName(), field.getValue());
+                }
+                resultList.add(retMap);
+            }
+            resultMap.put(jCoField.getName(), resultList);
+        } else if (jCoField.isStructure()) {
+            JCoStructure jCoStructure = (JCoStructure) jCoField;
+            Map resultStructureMap = new HashMap();
+            for (JCoFieldIterator jCoFieldIterator = jCoStructure.getFieldIterator(); jCoFieldIterator.hasNextField(); ) {
+                JCoField jcf = jCoFieldIterator.nextField();
+                resultStructureMap.put(jcf.getName(), jcf.getValue());
+            }
+            resultMap.put(jCoField.getName(), resultStructureMap);
+        } else {
+            resultMap.put(jCoField.getName(), jCoField.getValue());
+        }
     }
 
     /**
@@ -95,20 +160,22 @@ public class CustomJcoServiceImpl implements CustomJcoService {
      * 传入功能名称和Map类型参数
      * 用于执行单个SAP函数
      *
-     * @param functionName 函数名
-     * @param paramMap     参数
+     * @param callName 函数名
+     * @param paramMap 参数
      * @return R
      */
 
     @Override
-    public R execute(String functionName, String destName, Map<String, Object> paramMap) {
-        Map resultMap = new HashMap();
+    public R execute(String callName, Map<String, Object> paramMap) {
+        Map resultMap = new HashMap<>();
 
         //传入参数---------------------------------------------------------
 
         try {
+            SapFunction sapFunction = getFunctionName(callName);
+            String destName = getDestName(sapFunction.getConfigId());
             JCoDestination jCoDestination = getJcoDestination(destName);
-            JCoFunction jCoFunction = setFunctionParameter(jCoDestination, functionName, paramMap);
+            JCoFunction jCoFunction = setFunctionParameter(jCoDestination, sapFunction.getFunctionName(), paramMap);
 
             JCoContext.begin(jCoDestination);
 
@@ -119,11 +186,11 @@ public class CustomJcoServiceImpl implements CustomJcoService {
             }
 
             if (null != jCoFunction.getExportParameterList()) {
-                getExportParameterList(jCoFunction,resultMap);
+                getExportParameterList(jCoFunction, resultMap);
             }
 
             if (null != jCoFunction.getTableParameterList()) {
-                getTableParameterList(jCoFunction,resultMap);
+                getTableParameterList(jCoFunction, resultMap);
             }
 
         } catch (Exception e) {
@@ -144,16 +211,17 @@ public class CustomJcoServiceImpl implements CustomJcoService {
     }
 
     /**
-     *  设置函数参数
+     * 设置函数参数
+     *
      * @param jCoDestination JCO链接
-     * @param functionName 函数名
-     * @param paramMap 参数
+     * @param functionName   函数名
+     * @param paramMap       参数
      * @return function
      * @throws CustomBusinessException
      * @throws JCoException
      */
     @SuppressWarnings("unchecked")
-    public JCoFunction setFunctionParameter(JCoDestination jCoDestination, String functionName, Map<String,Object> paramMap) throws CustomBusinessException, JCoException {
+    public JCoFunction setFunctionParameter(JCoDestination jCoDestination, String functionName, Map<String, Object> paramMap) throws CustomBusinessException, JCoException {
         JCoFunction function = jCoDestination.getRepository().getFunction((functionName));
         if (null == function) {
             throw new CustomBusinessException(functionName + "不存在");
@@ -176,58 +244,35 @@ public class CustomJcoServiceImpl implements CustomJcoService {
     }
 
     /**
-     * 获取输出参数列表
-     * @param jCoFunction 函数
-     * @param resultMap 返回值
+     * 根据函数调用 获取服务器连接名
+     *
+     * @param callName 调用函数名
+     * @return 服务器连接名
+     * @throws CustomBusinessException
      */
-    public static void getExportParameterList(JCoFunction jCoFunction, Map resultMap){
-        for (Iterator<JCoField> iterator = jCoFunction.getExportParameterList().iterator();iterator.hasNext();){
-            traversalField(resultMap, iterator);
-        }
+    private SapFunction getFunctionName(String callName) throws Exception {
+        SelectStatementProvider selectStatementProvider = select(SapFunctionMapper.selectList)
+                .from(SapFunctionDynamicSqlSupport.sapFunction)
+                .where(SapFunctionDynamicSqlSupport.callName, isEqualTo(callName))
+                .build()
+                .render(RenderingStrategies.MYBATIS3);
+         return sapFunctionMapper.selectOne(selectStatementProvider).orElseThrow(() -> new Exception("找不到函数配置"));
     }
 
     /**
-     * 获取表格输出列表
-     * @param jCoFunction 函数
-     * @param resultMap 返回值
+     * 根据函数调用 获取服务器连接名
+     *
+     * @param sapConfigId 调用函数名
+     * @return 服务器连接名
+     * @throws CustomBusinessException
      */
-    public static void getTableParameterList(JCoFunction jCoFunction, Map resultMap){
-        for (Iterator<JCoField> iterator = jCoFunction.getTableParameterList().iterator();iterator.hasNext();){
-            traversalField(resultMap, iterator);
-        }
-    }
-
-    /**
-     * 遍历字段
-     * @param resultMap 返回值
-     * @param iterator 迭代器
-     */
-    private static void traversalField(Map resultMap, Iterator<JCoField> iterator) {
-        JCoField jCoField = iterator.next();
-        if (jCoField.isTable()){
-            JCoTable table = jCoField.getTable();
-            List resultList = new ArrayList();
-            for (int i = 0, len = table.getNumRows(); i< len;i++){
-                Map retMap = new HashMap();
-                table.setRow(i);
-                for (JCoRecordFieldIterator jCoRecordFieldIterator = table.getRecordFieldIterator(); jCoRecordFieldIterator.hasNextField();){
-                    JCoField field = jCoRecordFieldIterator.nextRecordField();
-                    retMap.put(field.getName(),field.getValue());
-                }
-                resultList.add(retMap);
-            }
-            resultMap.put(jCoField.getName(),resultList);
-        }else if (jCoField.isStructure()){
-            JCoStructure jCoStructure = (JCoStructure) jCoField;
-            Map resultStructureMap = new HashMap();
-            for (JCoFieldIterator jCoFieldIterator = jCoStructure.getFieldIterator(); jCoFieldIterator.hasNextField();){
-                JCoField jcf = jCoFieldIterator.nextField();
-                resultStructureMap.put(jcf.getName(),jcf.getValue());
-            }
-            resultMap.put(jCoField.getName(),resultStructureMap);
-        } else {
-            resultMap.put(jCoField.getName(),jCoField.getValue());
-        }
+    private String getDestName(String sapConfigId) throws Exception {
+        SelectStatementProvider selectStatementProvider1 = select(SapConfigDynamicSqlSupport.destName)
+                .from(SapConfigDynamicSqlSupport.sapConfig)
+                .where(SapConfigDynamicSqlSupport.id,isEqualTo(sapConfigId))
+                .build()
+                .render(RenderingStrategies.MYBATIS3);
+        return sapConfigMapper.selectOne(selectStatementProvider1).map(SapConfig::getDestName).orElseThrow(() -> new Exception("找不到服务器配置"));
     }
 
 
@@ -268,8 +313,9 @@ public class CustomJcoServiceImpl implements CustomJcoService {
 
     /**
      * 设置字段值
-     * @param rowData 参数值
-     * @param fieldIterator  迭代器
+     *
+     * @param rowData       参数值
+     * @param fieldIterator 迭代器
      * @throws CustomBusinessException
      */
     private void setFieldValue(Map<String, String> rowData, JCoFieldIterator fieldIterator) throws CustomBusinessException {

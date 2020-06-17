@@ -2,12 +2,15 @@ package cn.com.wdi.scm.vo;
 
 import cn.com.wdi.scm.enums.ScmExceptionEnum;
 import cn.com.wdi.scm.exception.ScmException;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.sql.SQLException;
 
 /**
@@ -17,30 +20,46 @@ import java.sql.SQLException;
  * @create 2020-04-30 14:09
  */
 
-public class ReturnBodyVO {
+@ApiModel(description = "统一返回体")
+public class ReturnBodyVO<T> implements Serializable {
 
-    String code;
+    private static final long serialVersionUID = 2613113453162530709L;
 
-    String msg;
 
-    Object data;
+    /**
+     *错误代码
+     */
+    @ApiModelProperty("错误代码")
+    private String code;
+
+    /**
+     * 错误信息
+     */
+    @ApiModelProperty("错误信息")
+    private String msg;
+
+    /**
+     * 数据对象
+     */
+    @ApiModelProperty("数据对象")
+    private T data;
 
     private ReturnBodyVO() {
         this.setCode("0");
         this.setMsg("操作成功");
     }
 
-    private ReturnBodyVO(ScmExceptionEnum scmExceptionEnum, Object data) {
-       this.setCode(scmExceptionEnum.getCode());
-       this.setMsg(scmExceptionEnum.getMsg());
-       this.setData(data);
+    private ReturnBodyVO(ScmExceptionEnum scmExceptionEnum, T data) {
+        this.setCode(scmExceptionEnum.getCode());
+        this.setMsg(scmExceptionEnum.getMsg());
+        this.setData(data);
     }
 
     /**
-     * SCM异常
+     * 成功返回
      */
-    public static ReturnBodyVO ok(Object data) {
-        return new ReturnBodyVO(ScmExceptionEnum.SUCCEED_CODE,data);
+    public ReturnBodyVO(T data) {
+        this(ScmExceptionEnum.SUCCEED_CODE, data);
     }
 
     /**
@@ -239,11 +258,11 @@ public class ReturnBodyVO {
         this.msg = msg;
     }
 
-    public Object getData() {
+    public T getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setData(T data) {
         this.data = data;
     }
 

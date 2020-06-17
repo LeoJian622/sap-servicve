@@ -1,13 +1,15 @@
 package cn.com.wdi.scm.controller;
 
 import cn.com.wdi.scm.converter.WdiPoLabel2OutOfSaleLabelVOConverter;
+import cn.com.wdi.scm.dto.MaterialInfoDTO;
 import cn.com.wdi.scm.manager.LabelManager;
 import cn.com.wdi.scm.model.ekp.WdiPoLabel;
 import cn.com.wdi.scm.query.WdiPoLabelQuery;
 import cn.com.wdi.scm.service.WdiPoLabelService;
 import cn.com.wdi.scm.util.UserUtil;
-import cn.com.wdi.scm.vo.LabelGenerateVO;
 import cn.com.wdi.scm.vo.OutOfSaleLabelGenerateVO;
+import cn.com.wdi.scm.vo.OutOfSaleLabelVO;
+import cn.com.wdi.scm.vo.QueryDataVO;
 import cn.com.wdi.scm.vo.ReturnBodyVO;
 import com.alibaba.druid.util.StringUtils;
 import io.swagger.annotations.Api;
@@ -17,21 +19,18 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * 标签生成控制器
  *
  * @author liyongjian
- * @date  2020-04-15 16:52
+ * @date 2020-04-15 16:52
  */
 
 @Api(value = "标签接口", tags = "label-controller")
-@RequestMapping("/api/v1/label")
+@RequestMapping("/v1/label")
 @RestController
 public class WdiLabelController {
 
@@ -55,8 +54,8 @@ public class WdiLabelController {
             @ApiImplicitParam(name = "supplier", value = "供应商编号", required = true, dataType = "String"),
     })
     @GetMapping("/info/{material}/{supplier}")
-    public ReturnBodyVO info(@PathVariable String material, @PathVariable String supplier) throws Exception {
-        return ReturnBodyVO.ok(labelManager.queryMaterialOutSaleLabelInfo(material, supplier));
+    public ReturnBodyVO<MaterialInfoDTO> info(@PathVariable String material, @PathVariable String supplier) throws Exception {
+        return new ReturnBodyVO<>(labelManager.queryMaterialOutSaleLabelInfo(material, supplier));
     }
 
     /**
@@ -69,12 +68,10 @@ public class WdiLabelController {
     @ApiOperation(value = "生成标签", notes = "根据所填标签信息及数量，生成标签")
     @ApiImplicitParam(name = "outOfSaleLabelGenerateVO", value = "标签信息实体OutOfSaleLabelGenerateVO", required = true, dataType = "OutOfSaleLabelGenerateVO")
     @PostMapping("/generate")
-    public ReturnBodyVO generate(@RequestBody OutOfSaleLabelGenerateVO outOfSaleLabelGenerateVO) throws Exception {
-        System.out.println(outOfSaleLabelGenerateVO);
+    public ReturnBodyVO<List<OutOfSaleLabelVO>> generate(@RequestBody OutOfSaleLabelGenerateVO outOfSaleLabelGenerateVO) throws Exception {
         List<WdiPoLabel> labelList = labelManager.insertLabels(outOfSaleLabelGenerateVO.getUnit(), outOfSaleLabelGenerateVO.getTotal(), outOfSaleLabelGenerateVO.getOutOfSaleLabel());
-        LabelGenerateVO labelGenerateVO = new LabelGenerateVO();
-        labelGenerateVO.setLableList(labelList);
-        return ReturnBodyVO.ok(labelGenerateVO);
+
+        return new ReturnBodyVO<>(labelList.stream().map(WdiPoLabel2OutOfSaleLabelVOConverter::convert).collect(Collectors.toList()));
     }
 
 
@@ -101,18 +98,18 @@ public class WdiLabelController {
             @ApiImplicitParam(name = "supplyId", value = "供应商编号", dataType = "String"),
             @ApiImplicitParam(name = "sDate", value = "起始日期", dataType = "Date"),
             @ApiImplicitParam(name = "eDate", value = "结束日期", dataType = "Date"),
-            @ApiImplicitParam(name = "page", value = "页数", dataType = "Integer",defaultValue="1"),
-            @ApiImplicitParam(name = "row", value = "每页行数", dataType = "Integer",defaultValue="15")
+            @ApiImplicitParam(name = "page", value = "页数", dataType = "Integer", defaultValue = "1"),
+            @ApiImplicitParam(name = "row", value = "每页行数", dataType = "Integer", defaultValue = "15")
     })
     @GetMapping("/search")
-    public ReturnBodyVO list(String targetId,
-                                       String material,
-                                       String userName,
-                                       String supplyId,
-                                       Date sDate,
-                                       Date eDate,
-                                       @RequestParam(value = "page", defaultValue = "1") Integer page,
-                                       @RequestParam(value = "row", defaultValue = "15") Integer row) throws Exception {
+    public ReturnBodyVO<QueryDataVO> list(String targetId,
+                             String material,
+                             String userName,
+                             String supplyId,
+                             Date sDate,
+                             Date eDate,
+                             @RequestParam(value = "page", defaultValue = "1") Integer page,
+                             @RequestParam(value = "row", defaultValue = "15") Integer row) throws Exception {
         userName = Optional.ofNullable(userName).filter(StringUtils::isEmpty)
                 .orElse(Objects.requireNonNull(UserUtil.getLoginUser()).getName());
         WdiPoLabelQuery wdiPoLabelQuery = WdiPoLabelQuery
@@ -128,7 +125,23 @@ public class WdiLabelController {
                 .build();
 
         List<WdiPoLabel> result = wdiPoLabelService.selectByWdiPoLabelQuery(wdiPoLabelQuery);
-        return ReturnBodyVO.ok(result.stream().skip(row * page).limit(row).map(WdiPoLabel2OutOfSaleLabelVOConverter::convert).collect(Collectors.toList()));
+
+        QueryDataVO queryDataVO = QueryDataVO.builder()
+                .targetId(targetId)
+                .material(material)
+                .userName(userName)
+                .supplyId(supplyId)
+                .sDate(sDate)
+                .eDate(eDate)
+                .page(page)
+                .row(row)
+                .pageList(result.stream()
+                        .skip(row * page)
+                        .limit(row)
+                        .map(WdiPoLabel2OutOfSaleLabelVOConverter::convert)
+                        .collect(Collectors.toList()))
+                .build();
+        return new ReturnBodyVO<>(queryDataVO);
     }
 
     /**
@@ -153,18 +166,18 @@ public class WdiLabelController {
             @ApiImplicitParam(name = "supplyId", value = "供应商编号", dataType = "String"),
             @ApiImplicitParam(name = "sDate", value = "起始日期", dataType = "Date"),
             @ApiImplicitParam(name = "eDate", value = "结束日期", dataType = "Date"),
-            @ApiImplicitParam(name = "page", value = "页数", dataType = "Integer",defaultValue="1"),
-            @ApiImplicitParam(name = "row", value = "每页行数", dataType = "Integer",defaultValue="15")
+            @ApiImplicitParam(name = "page", value = "页数", dataType = "Integer", defaultValue = "1"),
+            @ApiImplicitParam(name = "row", value = "每页行数", dataType = "Integer", defaultValue = "15")
     })
     @GetMapping("/listall")
-    public ReturnBodyVO listall(String targetId,
-                                          String material,
-                                          String userName,
-                                          String supplyId,
-                                          Date sDate,
-                                          Date eDate,
-                                          @RequestParam(defaultValue = "1") Integer page,
-                                          @RequestParam(defaultValue = "15") Integer row) {
+    public ReturnBodyVO<QueryDataVO> listall(String targetId,
+                                String material,
+                                String userName,
+                                String supplyId,
+                                Date sDate,
+                                Date eDate,
+                                @RequestParam(defaultValue = "1") Integer page,
+                                @RequestParam(defaultValue = "15") Integer row) throws Exception {
         WdiPoLabelQuery wdiPoLabelQuery = WdiPoLabelQuery
                 .builder()
                 .targetId(targetId)
@@ -176,14 +189,23 @@ public class WdiLabelController {
                 .page(page)
                 .row(row)
                 .build();
-        List<WdiPoLabel> result = null;
-        try {
-            result = wdiPoLabelService.selectByWdiPoLabelQuery(wdiPoLabelQuery);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        assert result != null;
-        return ReturnBodyVO.ok(result.stream().skip(row * page).limit(row).map(WdiPoLabel2OutOfSaleLabelVOConverter::convert).collect(Collectors.toList()));
+        List<WdiPoLabel> result = wdiPoLabelService.selectByWdiPoLabelQuery(wdiPoLabelQuery);
+        QueryDataVO queryDataVO = QueryDataVO.builder()
+                .targetId(targetId)
+                .material(material)
+                .userName(userName)
+                .supplyId(supplyId)
+                .sDate(sDate)
+                .eDate(eDate)
+                .page(page)
+                .row(row)
+                .pageList(result.stream()
+                        .skip(row * page)
+                        .limit(row)
+                        .map(WdiPoLabel2OutOfSaleLabelVOConverter::convert)
+                        .collect(Collectors.toList()))
+                .build();
+        return new ReturnBodyVO<>(queryDataVO);
     }
 
 }

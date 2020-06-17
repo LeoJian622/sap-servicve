@@ -33,7 +33,7 @@ class CustomJcoServiceImplTest {
         Map<String,String> inputStruct = new HashMap<>();
         inputStruct.put("WERKS","1100");
         input.put("G_WERKS",inputStruct);
-        R r = customJcoService.execute("Z_OA_LINGJIAN_RUKUJIANYAN","PRD800",input);
+        R r = customJcoService.execute("teste",input);
         Map<String,Object> dataMap = (Map<String, Object>) r.getData();
         List<Map<String,String>> re = (List<Map<String, String>>) dataMap.get("OUTPUTTAB");
         int i=0;

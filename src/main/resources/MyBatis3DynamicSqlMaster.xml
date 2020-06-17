@@ -27,6 +27,10 @@
             <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
 " type="pre"/>
         </table>
+        <table tableName="sap_function">
+            <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
+" type="pre"/>
+        </table>
         <table tableName="scm_menu">
             <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
 " type="pre"/>
@@ -35,6 +39,5 @@
             <generatedKey column="id" sqlStatement="select replace(newid(),'-','')
 " type="pre"/>
         </table>
-
     </context>
 </generatorConfiguration>

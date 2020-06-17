@@ -29,4 +29,6 @@ build/
 
 ### VS Code ###
 .vscode/
-/src/main/java/cn/com/wdi/scm/service/WdiPoLabelService.java
+
+### prod config ####
+/src/main/resources/application-pro.yml

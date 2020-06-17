@@ -88,14 +88,14 @@ public class LabelManagerImpl implements LabelManager {
                 throw new ScmException("SAP查询PO失败：" + sapPoList.get(StringEnum.MSG.getValue()));
             }
             List<Map<String, Object>> poList = (List<Map<String, Object>>) sapPoList.get("OMDEZ");
-            List<PurchaseOrdersDTO> purchaseOrdersDTOList = new ArrayList<>(poList.size());
+          String[] purchaseOrders  = new String[poList.size()];
+          int i =0;
             for (Map<String, Object> v : poList) {
                 PurchaseOrdersDTO purchaseOrdersDTO = new PurchaseOrdersDTO();
                 Optional<Object> Stringpo = Optional.ofNullable(v).map(x -> x.get("EXTRA"));
-                purchaseOrdersDTO.setPoNo((String) Stringpo.orElse(""));
-                purchaseOrdersDTOList.add(purchaseOrdersDTO);
+                purchaseOrders[i++] = (String) Stringpo.orElse("");
             }
-            materialInfoDTO.setPurchaseOrderses(purchaseOrdersDTOList);
+            materialInfoDTO.setPurchaseOrderless(purchaseOrders);
 
         } catch (ScmException e) {
             log.error("物料信息查询失败：[{}]", e.getMessage());
@@ -260,7 +260,7 @@ public class LabelManagerImpl implements LabelManager {
         input.put(StringEnum.MATNR.getValue(), material);
         input.put(StringEnum.TYPEX.getValue(), type);
         //执行SAP函数
-        R result = customJcoService.execute(StringEnum.Z_OA_LJCPOMRP.getValue(), StringEnum.PRD800.getValue(), input);
+        R result = customJcoService.execute(StringEnum.Z_OA_LJCPOMRP.getValue(), input);
         if (R.FAIL == result.getCode()) {
             throw new ScmException("SAP函数执行失败:" + StringEnum.Z_OA_LJCPOMRP.getValue() + "," + result.getMsg());
         }
