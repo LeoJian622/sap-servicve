@@ -1,6 +1,7 @@
 package cn.com.wdi.scm.service;
 
 import cn.com.wdi.scm.model.master.ScmPersonRole;
+import cn.com.wdi.scm.query.ScmPersonRoleQuery;
 
 import java.util.List;
 

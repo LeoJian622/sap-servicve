@@ -1,6 +1,7 @@
 package cn.com.wdi.scm.service;
 
 import cn.com.wdi.scm.model.master.ScmMenuRole;
+import cn.com.wdi.scm.query.ScmMenuRoleQuery;
 
 import java.util.List;
 
