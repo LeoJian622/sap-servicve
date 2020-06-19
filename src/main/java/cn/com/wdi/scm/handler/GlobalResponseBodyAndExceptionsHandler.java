@@ -4,7 +4,10 @@ import cn.com.wdi.scm.exception.ScmException;
 import cn.com.wdi.scm.vo.ReturnBodyVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -21,7 +24,10 @@ import java.sql.SQLException;
  */
 
 @Slf4j
+@Component
 @RestControllerAdvice
+@ConditionalOnWebApplication
+@ConditionalOnMissingBean(GlobalResponseBodyAndExceptionsHandler.class)
 public class GlobalResponseBodyAndExceptionsHandler{
 
     /** 运行异常 */

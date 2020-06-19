@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  */
 
 @Api(value = "标签接口", tags = "label-controller")
-@RequestMapping("/v1/label")
+@RequestMapping("/label")
 @RestController
 public class WdiLabelController {
 
